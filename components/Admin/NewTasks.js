@@ -4,17 +4,21 @@ import { Ionicons } from '@expo/vector-icons';
 import TaskCard from '../Common/TaskCard';
 import { getCurrentProjectDetails } from '../../data/Storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { getCurrentUser } from '../../data/Storage';
 
 const NewTasks = ({ route, navigation }) => {
+  const [member,setMember] = useState([])
+  const loadCurrentUser = async() => {
+    const user = await getCurrentUser()
+    if(user.role === 'member'){
+      setMember(user);
+    }
+  }
 
   const { projectId } = route.params;
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [tasks, setTasks] = useState([
-    { taskId: 1, taskName: 'Task 1', taskDescription: 'Description for Task 1', taskStatus: 'In Progress', created_at: '02/11/23' },
-    { taskId: 2, taskName: 'Task 2', taskDescription: 'Description for Task 2', taskStatus: 'Completed', created_at: '02/11/23' }
-    // Add more tasks as needed
-  ]);
+  const [tasks, setTasks] = useState([]);
 
   const filteredTasks= tasks.filter(task => 
     task.taskName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -24,17 +28,24 @@ const NewTasks = ({ route, navigation }) => {
   const loadTasks = async() => {
     const data = await getCurrentProjectDetails(projectId)
     if(data !== null){
-      setTasks(data.tasks.filter((t) => t.status === 'New'))
+      if(member.id != null){
+        setTasks(data.tasks.filter((t) => (t.status === 'New' && t.assignedMember === member.id) ))
+      }else{
+        setTasks(data.tasks.filter((t) => t.status === 'New'))
+      }
+     
     }
   }
 
   useEffect( () => {
+    loadCurrentUser();
     loadTasks();
-  },[searchQuery])
+  },[member, searchQuery])
 
   useFocusEffect(
     React.useCallback(() => {
       // Load or refresh data here
+      loadCurrentUser();
       loadTasks();
     }, [])
   );

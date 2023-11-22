@@ -160,7 +160,11 @@ export const getCurrentProjectDetails = async(projectID) => {
 export const getMyProjectList = async(userID) => {
     try{
         const projects = await getProjectList()
-        const myProjects = projects.filter( (item) => item.adminId === userID)
+        const myProjects = projects.filter((item) => {
+            const isAdmin = item.adminId === userID;
+            const hasAssignedTasks = item.tasks && item.tasks.some(task => task.assignedMember === userID);
+            return isAdmin || hasAssignedTasks;
+          });
         return myProjects || []
     }
     catch(error){
