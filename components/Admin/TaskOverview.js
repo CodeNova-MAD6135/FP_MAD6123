@@ -6,48 +6,26 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import NewTasks from './NewTasks';
 import InProgressTasks from './InProgressTasks';
 import CompletedTasks from './CompletedTasks';
+import { getCurrentUser } from '../../data/Storage';
 
 const Tab = createMaterialTopTabNavigator();
 
 const TaskOverview = ({ route, navigation }) => {
+  const [isAdmin,setIsAdmin] = useState(false)
+  const loadCurrentUser = async() => {
+    const user = await getCurrentUser()
+    if(user){
+      setIsAdmin(user.role === 'admin')
+    }
+  }
+  loadCurrentUser()
+
   const { projectId } = route.params;
-  
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [tasks, setTasks] = useState([
-    { taskId: 1, taskName: 'Task 1', taskDescription: 'Description for Task 1', taskStatus: 'In Progress', created_at: '02/11/23' },
-    { taskId: 2, taskName: 'Task 2', taskDescription: 'Description for Task 2', taskStatus: 'Completed', created_at: '02/11/23' }
-    // Add more tasks as needed
-  ]);
-
-  const filteredTasks= tasks.filter(task => 
-    task.taskName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.taskDescription.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddTask = () => {
     // Navigate to AddTask screen with projectId as a parameter
     navigation.navigate('AddTask', { projectId });
   };
-
-  const renderItem = ({ item }) => (
-    <View style={styles.taskItem}>
-      <View style={styles.leftCol}>
-        <Ionicons name='folder-open-outline' size={24} color={'#d7d7d7'} />
-      </View>
-      <View style={styles.rightCol}>
-        <View style={styles.rcFirst}>
-        <Text style={styles.taskName}>{item.taskName}</Text>
-        <Text style={styles.taskDescription}>{item.taskDescription}</Text>
-        </View>
-        <View style={styles.rcLast}>
-        <Text style={styles.taskStatus}>{item.taskStatus}</Text>
-        <Text style={styles.taskDate}>{item.created_at}</Text>
-        </View>
-        
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -60,10 +38,11 @@ const TaskOverview = ({ route, navigation }) => {
         <Tab.Screen name="In Progress" component={InProgressTasks} initialParams={{ projectId }}/>
         <Tab.Screen name="Completed" component={CompletedTasks} initialParams={{ projectId }}/>
       </Tab.Navigator>
-
+      {isAdmin ? (
       <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
         <Feather name="plus" size={24} color="white" />
       </TouchableOpacity>
+      ) : ''}
     </View>
   );
 };

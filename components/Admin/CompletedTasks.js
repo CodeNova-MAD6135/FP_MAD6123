@@ -4,8 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import TaskCard from '../Common/TaskCard';
 import { getCurrentProjectDetails } from '../../data/Storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { getCurrentUser } from '../../data/Storage';
 
 const CompletedTasks = ({ route, navigation }) => {
+  const [member,setMember] = useState([])
+  const loadCurrentUser = async() => {
+    const user = await getCurrentUser()
+    if(user.role === 'member'){
+      setMember(user);
+    }
+  }
 
   const { projectId } = route.params;
 
@@ -24,17 +32,24 @@ const CompletedTasks = ({ route, navigation }) => {
   const loadTasks = async() => {
     const data = await getCurrentProjectDetails(projectId)
     if(data !== null){
-      setTasks(data.tasks.filter((t) => t.status === 'Completed'))
+      if(member.id != null){
+        setTasks(data.tasks.filter((t) => (t.status === 'Completed' && t.assignedMember === member.id) ))
+      }else{
+        setTasks(data.tasks.filter((t) => t.status === 'Completed'))
+      }
+     
     }
   }
 
   useEffect( () => {
-    loadTasks()
-  },[searchQuery])
+    loadCurrentUser();
+    loadTasks();
+  },[member, searchQuery])
 
   useFocusEffect(
     React.useCallback(() => {
       // Load or refresh data here
+      loadCurrentUser();
       loadTasks();
     }, [])
   );

@@ -5,11 +5,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { BarChart } from 'react-native-chart-kit';
 import { deleteProjectTask, getCurrentProjectDetails } from '../../data/Storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { getCurrentUser } from '../../data/Storage';
 
 const ProjectDetail = ({ route, navigation }) => {
+  const [member,setMember] = useState([])
+  const loadCurrentUser = async() => {
+    const user = await getCurrentUser()
+    if(user.role === 'member'){
+      setMember(user);
+    }
+  }
+  loadCurrentUser();
   const { projectId, projectName, projectDescription } = route.params;
-  
-
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState([
     { taskId: 1, taskName: 'Task 1', taskDescription: 'Description for Task 1', status: 'In Progress', created_at: '02/11/23' },
@@ -17,8 +24,12 @@ const ProjectDetail = ({ route, navigation }) => {
     // Add more tasks as needed
   ]);
 
-  const countTasksByStatus = (status) => {
-    return tasks.filter(task => task.status === status).length;
+  const countTasksByStatus = (status, userId) => {
+    if(userId != null){
+      return tasks.filter(task => (task.status === status && task.assignedMember === userId)).length;
+    }else{
+      return tasks.filter(task => task.status === status).length;
+    }
   };
   const filteredTasks= tasks.filter(task => 
     task.taskName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -33,18 +44,18 @@ const ProjectDetail = ({ route, navigation }) => {
     }
   }
 
-  let newTasksCount = countTasksByStatus('Pending');
-  let inProgressTasksCount = countTasksByStatus('In Progress');
-  let completedTasksCount = countTasksByStatus('Completed');
+  let newTasksCount = countTasksByStatus('New', member ? member.id : null);
+  let inProgressTasksCount = countTasksByStatus('In Progress', member ? member.id : null);
+  let completedTasksCount = countTasksByStatus('Completed', member ? member.id : null);
 
   const loadTasks = async() => {
     const data = await getCurrentProjectDetails(projectId)
     if(data !== null){
       setTasks(data.tasks)
     }
-    newTasksCount = countTasksByStatus('Pending');
-    inProgressTasksCount = countTasksByStatus('In Progress');
-    completedTasksCount = countTasksByStatus('Completed');
+    newTasksCount = countTasksByStatus('New', member ? member.id : null);
+    inProgressTasksCount = countTasksByStatus('In Progress', member ? member.id : null);
+    completedTasksCount = countTasksByStatus('Completed', member ? member.id : null);
   }
 
   useEffect( () => {

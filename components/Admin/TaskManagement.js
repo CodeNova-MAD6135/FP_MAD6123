@@ -6,6 +6,14 @@ import { deleteProject, getMyProjectList, getProjectList, getCurrentUser } from 
 import { useFocusEffect } from '@react-navigation/native';
 
 const TaskManagement = ({ navigation }) => {
+  const [isAdmin,setIsAdmin] = useState(false)
+  const loadCurrentUser = async() => {
+    const user = await getCurrentUser()
+    if(user){
+      setIsAdmin(user.role === 'admin')
+    }
+  }
+  loadCurrentUser()
 
   // const {userId} = route.params;
   const [userId,setUserId] = useState('');
@@ -99,11 +107,13 @@ const TaskManagement = ({ navigation }) => {
             <TouchableOpacity onPress={() => handleProjectPress(project)}>
               <Text style={styles.label}>{project.projectName}</Text>
               </TouchableOpacity>
+              {isAdmin ? (
               <View style={styles.actions}>
                 <TouchableOpacity onPress={() => handleDelete(project)}>
                   <Ionicons name="trash" size={20} color="white" />
                 </TouchableOpacity>
               </View>
+              ) : '' }
             </View>
         </View>
       ))}
@@ -131,9 +141,11 @@ const TaskManagement = ({ navigation }) => {
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
       />
+      {isAdmin ? (
        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddProject',{userId:userId})}>
         <Feather name="plus" size={24} color="white" />
       </TouchableOpacity>
+      ) : '' }
     </View>
   );
 };
