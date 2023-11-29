@@ -19,7 +19,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import Colors from '../assets/Colors';
 import Strings from '../assets/Strings';
 
-import Storage, { getUser, loginUser, setCurrentUser, getCurrentUser } from '../data/Storage';
+import Storage, { getUser, setCurrentUser, getCurrentUser } from '../data/Storage';
+import {loginUser } from '../data/Network'
 
 // import {
 //   findUserByEmailAndPassword
@@ -65,12 +66,13 @@ const LoginScreen = ({navigation}) => {
     }
 
     const response = await loginUser(email,password);
-    if(response.status){
+    if(response.ok){
+      console.log(res)
       await setCurrentUser(response.data)
       navigation.navigate('TabNavigator', { screen: 'ProjectOverview'});
     }
     else{
-      Alert.alert("User not found", 'Credentials doesn\'t match.', [{ text: 'Ok' }]);
+      Alert.alert("User not found", response.message, [{ text: 'Ok' }]);
     }
     setEmail('')
     setPassword('')
