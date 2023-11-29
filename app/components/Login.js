@@ -30,7 +30,7 @@ const LoginScreen = ({navigation}) => {
   // const { show } = useToast
 
   const getUser = async() => {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
     if(user != null){
       navigation.navigate('TabNavigator', { screen: 'ProjectOverview'});
     }

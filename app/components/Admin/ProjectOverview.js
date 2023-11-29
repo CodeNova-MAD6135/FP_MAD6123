@@ -29,8 +29,9 @@ const ProjectOverview = ({ route }) => {
     getUser();
 
     const loadProjects = async () => {
+      console.log(userId)
       const allProjects = await getMyProjectList(userId);
-      setProjects(allProjects);
+      //setProjects(allProjects);
 
       // Calculate project start dates based on tasks
       const projectStartDates = {};

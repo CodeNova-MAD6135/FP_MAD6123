@@ -1,5 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const clearAllData = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log('AsyncStorage data cleared successfully.');
+  } catch (error) {
+    console.error('Error clearing AsyncStorage data:', error);
+  }
+};
+
+//clearAllData();
+
 const USER_DATA = "USER"
 const PROJECT_DATA = "PROJECT"
 
@@ -39,19 +50,17 @@ export const logoutUser = async() => {
 }
 
 
-export const getUserList = async() => {
-    try{
-        const users = await AsyncStorage.getItem(USER_DATA);
-        if(users){
-            return JSON.parse(users);
-        }
-        return [];
+export const getUserList = async (type) => {
+    try {
+      const response = await axios.get('http://localhost:8090/users/');
+      const users = response.data;
+
+      return users;
+    } catch (error) {
+      console.error('Error fetching user list:', error);
+      return [];
     }
-    catch(error){
-        console.log("error getting user list:" + error.msg)
-        return [];
-    }
-};
+  };
 
 
 export const getUserListOfType = async (type) => {
@@ -70,8 +79,9 @@ export const getUserListOfType = async (type) => {
 
 export const getUserByID = async(id) => {
     try{
-        const users = await getUserList()
-        return users.find( (u) => u.id === id ) || null
+        const response = await axios.get(`http://localhost:8090/users/${id}`);
+        const user = response.data;
+        return user;
     }
     catch(error){
         return null
@@ -82,6 +92,7 @@ export const getUserByID = async(id) => {
 export const loginUser = async(email,pwd) => {
     try{
         const data = await getUserList()
+        console.log(data)
         const myUser = data.find( (item) => item.email === email && item.pwd === pwd)
         if(myUser){
             return {
@@ -171,49 +182,65 @@ export const getCurrentProjectDetails = async(projectID) => {
     }
 }
 
-export const getMyProjectList = async(userID) => {
-    try{
-        const projects = await getProjectList()
+export const getMyProjectList = async (userID) => {
+    try {
+      const response = await axios.get(`http://localhost:8090/projects/`);
+  
+      if (response.status === 200) {
+        const projects = response.data;
         const myProjects = projects.filter((item) => {
-            const isAdmin = item.adminId === userID;
-            const hasAssignedTasks = item.tasks && item.tasks.some(task => task.assignedMember === userID);
-            return isAdmin || hasAssignedTasks;
-          });
-        return myProjects || []
+          const isAdmin = item.adminId === userID;
+          const hasAssignedTasks = item.tasks && item.tasks.some((task) => task.assignedMember === userID);
+          return isAdmin || hasAssignedTasks;
+        });
+  
+        return myProjects || [];
+      } else {
+        console.error('Error fetching projects:', response.statusText);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error.message);
+      return [];
     }
-    catch(error){
-        return []
-    }
-}
+  };
 
-export const addNewProject = async(project) => {
-    try{
-        let projects = await getProjectList()
-        await AsyncStorage.setItem(PROJECT_DATA,JSON.stringify([...projects,project]))
-        return true
+export const addNewProject = async (project) => {
+    try {
+      const response = await axios.post('http://localhost:8090/projects/add', project);
+  
+      return {
+        status: true,
+        data: response.data,
+        msg: 'Project added successfully.',
+      };
+    } catch (error) {
+      console.error('Error adding project:', error);
+  
+      return {
+        status: false,
+        data: null,
+        msg: 'Internal Server Error',
+      };
     }
-    catch(error){
-        return false
-    }
-}
+  };
 
-export const deleteProject = async(projectID) => {
-    try{
-        let projects = await getProjectList()
-        projects = projects.filter( (item) => item.projectId !== projectID )
-        await AsyncStorage.setItem(PROJECT_DATA,JSON.stringify(projects))
-        return {
-            status: true,
-            data: projects
-        }
+  export const deleteProject = async (projectID) => {
+    try {
+      await axios.delete(`http://localhost:8090/projects/${projectID}`);
+      const projects = await getProjectList();
+  
+      return {
+        status: true,
+        data: projects,
+      };
+    } catch (error) {
+      return {
+        status: false,
+        data: [],
+      };
     }
-    catch(error){
-        return {
-            status:false,
-            data: []
-        }
-    }
-}
+  };
 
 export const addProjectTask = async(projectID,task) => {
     try{

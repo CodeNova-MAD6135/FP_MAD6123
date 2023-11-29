@@ -1,11 +1,11 @@
-const Project = require('../models/project');
+const Project = require('../models/project.model');
 
-exports.createProject = async (req, res) => {
+exports.addNewProject = async (req, res) => {
   // Implementation for creating a new project
-  const { projectId, adminId, tasks } = req.body;
+  const { projectId, adminId, projectName, projectDescription, tasks } = req.body;
 
   try {
-    const newProject = new Project({ projectId, adminId, tasks });
+    const newProject = new Project({ projectId, adminId, projectName, projectDescription, tasks });
     await newProject.save();
     res.status(201).json(newProject);
   } catch (error) {
@@ -13,24 +13,17 @@ exports.createProject = async (req, res) => {
   }
 };
 
-exports.getAllProjects = async (req, res) => {
-  // Implementation for getting all projects
-};
 
-
-exports.getProjectsByAdminID = async(req,res) => {
-  // get projects for a specific admin
+exports.getMyProjectList = async (req, res) => {
   try {
-    const adminId = req.params.adminId;
+    // Find all projects
+    const projects = await Project.find();
 
-    // Find projects where the adminId matches
-    const projects = await Project.find({ adminId });
-    
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 exports.getProjectById = async (req, res) => {
   // Implementation for getting a project by ID
@@ -66,17 +59,13 @@ exports.updateProject = async (req, res) => {
   }
 };
 
-exports.deleteProject = async (req, res) => {
-  // Implementation for deleting a project
-  try { 
-    const project = await Project.findById(req.params.id);
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
-    }
+exports.deleteProject = async (projectId) => {
+  try {
+    // Delete the project from MongoDB
+    await Project.deleteOne({ projectId });
 
-    await project.remove();
-    res.json({ message: 'Project deleted' });
+    console.log('Project deleted successfully.');
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    throw error; // Rethrow the error for handling in the route
   }
 };

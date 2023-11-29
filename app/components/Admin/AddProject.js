@@ -14,13 +14,10 @@ const AddProject = ({ route,navigation }) => {
     // Handle adding the project (e.g., save to state or API)
     // You can implement this part as needed
     const project = {
-      projectId: new Date().getTime(),
       adminId: userId,
       projectName: projectName,
       projectDescription: projectDescription,
       tasks: [],
-      progress: 0,
-      status: 'In Progress'
     }
     const added = await addNewProject(project)
     if(added){

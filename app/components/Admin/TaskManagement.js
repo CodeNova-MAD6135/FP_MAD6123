@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
-import { deleteProject, getMyProjectList, getProjectList, getCurrentUser } from '../../data/Storage';
+import { deleteProject, getMyProjectList, getCurrentUser } from '../../data/Storage';
 import { useFocusEffect } from '@react-navigation/native';
 
 const TaskManagement = ({ navigation }) => {
@@ -23,7 +23,7 @@ const TaskManagement = ({ navigation }) => {
 
   const getUser = async() => {
     const user = await getCurrentUser()
-    setUserId(user.id)
+    setUserId(user._id)
   }
 
   const loadProjects = async() => {
@@ -68,7 +68,7 @@ const TaskManagement = ({ navigation }) => {
           text: 'Delete',
           onPress: () => {
             // setProjects(projects.filter( (project) => project.projectId !== projectItem.projectId))
-            deleteItem(projectItem.projectId)
+            deleteItem(projectItem._id)
           },
           style: 'destructive',
         },

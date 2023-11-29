@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
-  taskId: {
-    type: Number,
+  taskName: {
+    type: String,
     required: true,
-    unique: true,
+  },
+  taskDescription: {
+    type: String,
   },
   startDate: {
     type: Date,
@@ -23,18 +25,28 @@ const taskSchema = new mongoose.Schema({
 });
 
 const projectSchema = new mongoose.Schema({
-  projectId: {
-    type: Number,
+  projectName: {
+    type: String,
     required: true,
-    unique: true,
+  },
+  projectDescription: {
+    type: String,
   },
   adminId: {
-    type: Number,
+    type: String,
     required: true,
   },
   tasks: [taskSchema],
 }, {
   timestamps: true,
+});
+
+projectSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    // remove the _id and __v fields
+    delete ret._id;
+    delete ret.__v;
+  },
 });
 
 const Project = mongoose.model('Project', projectSchema);
