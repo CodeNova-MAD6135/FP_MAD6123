@@ -28,21 +28,19 @@ const TaskManagement = ({ navigation }) => {
 
   const loadProjects = async() => {
     const projects = await getMyProjectList(userId)
-    console.log(projects)
+    //console.log(projects)
     setProjects(projects)
   };
 
   useEffect( () => {
     getUser();
     loadProjects();
-  },[userId,searchQuery])
+  },[userId,searchQuery, projects])
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     getUser();
-  //     loadProjects();
-  //   }, [])
-  // );
+  useFocusEffect(
+    React.useCallback(() => {
+    }, [projects])
+  );
 
   const filteredProjects = projects.filter( (project) => 
     project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
