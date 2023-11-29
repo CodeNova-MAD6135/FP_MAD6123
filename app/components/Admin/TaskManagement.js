@@ -28,7 +28,6 @@ const TaskManagement = ({ navigation }) => {
 
   const loadProjects = async() => {
     const projects = await getMyProjectList(userId)
-    //console.log(projects)
     setProjects(projects)
   };
 
@@ -81,7 +80,7 @@ const TaskManagement = ({ navigation }) => {
     navigation.navigate('ProjectDetail', 
     { 
       userId: userId,
-      projectId: projectItem.projectId,
+      projectId: projectItem._id,
       projectName: projectItem.projectName,
       projectDescription: projectItem.projectDescription
     });
@@ -99,7 +98,7 @@ const TaskManagement = ({ navigation }) => {
   const renderItem = ({ item }) => (
     <View style={styles.rowContainer}>
       {item.map(project => (
-          <View key={project.projectId} style={styles.folderContainer} >
+          <View key={project._id} style={styles.folderContainer} >
             <View style={styles.backCard}></View>
             <View style={styles.frontCard}>
             <TouchableOpacity onPress={() => handleProjectPress(project)}>

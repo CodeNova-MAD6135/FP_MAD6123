@@ -242,18 +242,20 @@ export const addNewProject = async (project) => {
     }
   };
 
-export const addProjectTask = async(projectID,task) => {
-    try{
-        let projects = await getProjectList()
-        let myProject = projects.find(project => project.projectId === projectID)
-        myProject.tasks.push(task)
-        await AsyncStorage.setItem(PROJECT_DATA,JSON.stringify(projects))
-        return true
+  export const addProjectTask = async (projectID, task) => {
+    try {
+      // Make a POST request to the server endpoint
+      const response = await axios.post(`http://localhost:8090/projects/${projectID}/tasks`, { task });
+
+      const updatedProject = response.data;
+  
+      return true;
+    } catch (error) {
+      console.error('Error adding project task:', error);
+      return false;
     }
-    catch(error){
-        return false
-    }
-}
+  };
+
 export const updateProjectTask = async(projectID, task) => {
     try{
         let projects = await getProjectList()

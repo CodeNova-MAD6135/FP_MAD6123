@@ -1,17 +1,18 @@
-const Task = require('../models/task');
+const Project = require('../models/project.model');
 
-exports.createTask = async (req, res) => {
+exports.addProjectTask = async (req, res) => {
   // Implementation for creating a new taks
-  const { taskId, startDate, endDate, completionHours, status } = req.body;
+  const { taskName, taskDescription, startDate, endDate, completionHours, status } = req.body;
   
     try {
-      const project = await Project.findOne({ projectId: req.params.projectId });
+      const project = await Project.findOne({ _id: req.params.projectId });
       if (!project) {
         return res.status(404).json({ message: 'Project not found' });
       }
   
       const newTask = {
-        taskId,
+        taskName,
+        taskDescription,
         startDate,
         endDate,
         completionHours,

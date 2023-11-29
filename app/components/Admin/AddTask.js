@@ -3,7 +3,7 @@ import { View, Alert, TextInput, TouchableOpacity, Text, StyleSheet } from 'reac
 import * as DocumentPicker from 'expo-document-picker';
 import { FontAwesome5 } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
-import { addProjectTask, getUserList } from '../../data/Storage';
+import { addProjectTask, getUserListOfType } from '../../data/Storage';
 
 const AddTask = ({ route, navigation }) => {
 
@@ -18,14 +18,13 @@ const AddTask = ({ route, navigation }) => {
 
   useEffect( () => {
     const loadMembers = async() => {
-      let users = await getUserList()
-      let memberUsers = users.filter((u) => u.role === 'member')
-      if(memberUsers){
+      let users = await getUserListOfType('member');
+      if(users){
         let names = []
-        memberUsers.map( (user,index) => {
+        users.map( (user,index) => {
           names.push({
             label: user.name,
-            value: user.id
+            value: user._id
           })
         });
         setMemberNames(names)
@@ -38,13 +37,14 @@ const AddTask = ({ route, navigation }) => {
     // Handle adding the Task (e.g., save to state or API)
     // You can implement this part as needed
     const task = {
-      taskId: new Date().getTime(),
       taskName: TaskName,
       taskDescription: TaskDescription,
       assignedMember: selectedMember,
       attachedDocument: AttachedDocument,
       status: "New"
     } 
+
+    console.log(projectId)
     const added = await addProjectTask(projectId,task)
     if(added){
       Alert.alert("Success", "New Task Created", [{ text: 'Ok' }]);
@@ -98,10 +98,6 @@ const AddTask = ({ route, navigation }) => {
                   setSelectedMember(value)
                 }}
                 items={
-                //   [
-                //   { label: 'Rahul', value: 'rahul' },
-                //   { label: 'Riya', value: 'riya' },
-                // ]
                 memberNames
               }
                 style={{

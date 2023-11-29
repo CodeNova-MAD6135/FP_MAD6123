@@ -17,6 +17,7 @@ const ProjectDetail = ({ route, navigation }) => {
   }
   loadCurrentUser();
   const { projectId, projectName, projectDescription } = route.params;
+  console.log(projectId)
   const [searchQuery, setSearchQuery] = useState('');
   const [tasks, setTasks] = useState([
     { taskId: 1, taskName: 'Task 1', taskDescription: 'Description for Task 1', status: 'In Progress', created_at: '02/11/23' },
