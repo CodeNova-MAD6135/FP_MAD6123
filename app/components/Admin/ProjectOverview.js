@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Dimensions, ScrollView } from 'react-native';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-} from 'react-native-chart-kit';
+import { LineChart } from 'react-native-chart-kit';
 import { getCurrentUser, getMyProjectList, getUserByID } from '../../data/Storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+
+LocaleConfig.locales['en'] = {
+  monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  monthNamesShort: ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.', 'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.'],
+  dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  dayNamesShort: ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'],
+};
+
+LocaleConfig.defaultLocale = 'en';
 
 const ProjectOverview = ({ route }) => {
   const [userId, setUserId] = useState('');
   const [projects, setProjects] = useState([]);
   const [linedata, setLineChartData] = useState();
-
-  // const linedata = {
-  //   labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-  //   datasets: [
-  //     {
-  //       data: [20, 45, 28, 80, 99, 43],
-  //       strokeWidth: 2, // optional
-  //     },
-  //   ],
-  // };
+  const [markedDates, setMarkedDates] = useState({});
 
   useEffect(() => {
-
     const getUser = async () => {
       const user = await getCurrentUser();
       setUserId(user.id);
@@ -35,16 +31,58 @@ const ProjectOverview = ({ route }) => {
     const loadProjects = async () => {
       const allProjects = await getMyProjectList(userId);
       setProjects(allProjects);
+
+      // Calculate project start dates based on tasks
+      const projectStartDates = {};
+      allProjects.forEach((project) => {
+        
+        const earliestStartDate = calculateEarliestStartDate(project.tasks);
+        if (earliestStartDate) {
+          projectStartDates[earliestStartDate] = {
+            customStyles: {
+              container: {
+                backgroundColor: '#5D5FDE',
+                borderRadius: 20,
+              },
+              text: {
+                color: 'white',
+              },
+            },
+          };
+        }
+      });
+      
+      setMarkedDates(projectStartDates);
+      //console.log(markedDates)
     };
 
     loadProjects();
-
   }, [userId]);
+
+  const calculateEarliestStartDate = (tasks) => {
+    let earliestStartDate = null;
+
+    tasks.forEach((task) => {
+      if (task.startDate) {
+        const taskStartDate = new Date(task.startDate);
+        if (!earliestStartDate || taskStartDate < earliestStartDate) {
+          earliestStartDate = taskStartDate;
+        }
+      }
+    });
+
+    if(earliestStartDate != null){
+      return earliestStartDate?.toISOString().split('T')[0];
+    }
+
+
+    return earliestStartDate;
+  };
 
   useEffect(() => {
     const calculateProjectCostsForLineChart = async () => {
       const newLineChartData = {
-        labels: [],  // Project names as labels
+        labels: [],
         datasets: [{ data: [], strokeWidth: 2 }],
       };
 
@@ -55,21 +93,16 @@ const ProjectOverview = ({ route }) => {
           const totalCost = await calculateTotalCost(completedTasks);
 
           if (totalCost !== undefined) {
-
             newLineChartData.labels.push(project.projectName);
             newLineChartData.datasets[0].data.push(totalCost);
-
           }
         }
       }
 
       setLineChartData(newLineChartData);
-      console.log(linedata);
-
     };
 
     const calculateTotalCost = async (completedTasks) => {
-
       const totalCost = await completedTasks.reduce(async (acc, task) => {
         const member = await getUserByID(task.assignedMember);
         const hourlyRate = member.rate;
@@ -81,48 +114,49 @@ const ProjectOverview = ({ route }) => {
     };
 
     calculateProjectCostsForLineChart();
-
-
-
   }, [projects]);
 
   useEffect(() => {
     // Log the updated linedata when it changes
-    console.log(linedata);
+    //console.log(linedata);
   }, [linedata]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-    }, [linedata])
-  );
+  useFocusEffect(React.useCallback(() => {}, [linedata]));
 
   return (
     <ScrollView>
-      {linedata && linedata.datasets && linedata.datasets[0].data.length > 0 && (
-        <View style={styles.lineChart}>
+      <View style={styles.lineChart}>
+        {linedata && linedata.datasets && linedata.datasets[0].data.length > 0 && (
           <LineChart
             data={linedata}
-            width={420} // from react-native
+            width={Dimensions.get('window').width}
             height={220}
             yAxisLabel={'$'}
             chartConfig={{
               backgroundColor: '#5D5FDE',
               backgroundGradientFrom: '#5D5FDE',
               backgroundGradientTo: '#5D5FDE',
-              decimalPlaces: 2, // optional, defaults to 2dp
+              decimalPlaces: 2,
               color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               style: {
                 marginVertical: 40,
-              }
+              },
             }}
             bezier
             style={{
-              borderRadius: 5
+              borderRadius: 5,
             }}
           />
-        </View>
-      )}
+        )}
+      </View>
 
+      {/* Calendar Section */}
+      <View style={styles.calendarContainer}>
+        <Calendar
+          markingType={'custom'}
+          markedDates={markedDates}
+        />
+      </View>
     </ScrollView>
   );
 };
@@ -139,9 +173,11 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    margin: 10,
+  },
+  calendarContainer: {
     marginTop: 20,
-  }
+  },
 });
 
 export default ProjectOverview;
-
