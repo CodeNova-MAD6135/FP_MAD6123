@@ -1,15 +1,40 @@
-const User = require('../models/user');
+const User = require('../models/user.model');
 
 exports.createUser = async (req, res) => {
-  // Implementation for creating a new user
   const { name, email, pwd, role } = req.body;
 
   try {
-    const newUser = new User({ name, email, pwd, role });
+    const existingUser = await User.findOne({ email, role });
+
+    if (existingUser) {
+      return res.status(400).json({
+        status: false,
+        data: null,
+        msg: 'User already exists',
+      });
+    }
+
+    let rate = 0;
+
+    if (role === 'member') {
+      rate = 20;
+    }
+
+    const newUser = new User({ name, email, pwd, role, rate });
     await newUser.save();
-    res.status(201).json(newUser);
+
+    res.status(201).json({
+      status: true,
+      data: newUser,
+      msg: 'Successfully registered.',
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error adding user:', error);
+    res.status(500).json({
+      status: false,
+      data: null,
+      msg: 'Internal Server Error',
+    });
   }
 };
 
@@ -38,7 +63,7 @@ exports.getUserById = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   // Implementation for updating a user
-  const { name, email, pwd, role } = req.body;
+  const { name, email, pwd, role, rate } = req.body;
 
   try {
     const user = await User.findById(req.params.id);
@@ -46,10 +71,11 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    user.name = name;
-    user.email = email;
-    user.pwd = pwd;
-    user.role = role;
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.pwd = pwd || user.pwd;
+    user.role = role || user.role;
+    user.rate = rate || user.rate;
 
     await user.save();
     res.json(user);
@@ -57,6 +83,7 @@ exports.updateUser = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 
 exports.deleteUser = async (req, res) => {
   // Implementation for deleting a user

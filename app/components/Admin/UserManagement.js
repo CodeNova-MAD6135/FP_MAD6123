@@ -2,7 +2,6 @@ import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image, Alert, TextI
 import React, { useState, useRef, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
-import { getUserList } from '../../data/Storage';
 import { getUserListOfType } from '../../data/Storage';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -11,10 +10,7 @@ const UserManagement = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const openedRow = useRef();
 
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'john.doe@example.com', rate: 4.5 },
-    { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', rate: 3.8 },
-  ]);
+  const [users, setUsers] = useState([]);
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -49,7 +45,7 @@ const UserManagement = ({ navigation }) => {
   };
 
   const loadUsers = async() => {
-    const data = await getUserListOfType('member')
+    const data = await getUserListOfType('member');
     setUsers(data);
   }
 
@@ -118,7 +114,7 @@ const UserManagement = ({ navigation }) => {
       />
       <FlatList
         data={filteredUsers}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item._id.toString()}
         renderItem={renderItem}
       />
     </View>

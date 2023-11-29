@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const USER_DATA = "USER"
 const PROJECT_DATA = "PROJECT"
 
+import axios from 'axios';
+
 export const setCurrentUser = async(user) => {
     try{
         await AsyncStorage.setItem('current_user',JSON.stringify(user))
@@ -50,15 +52,22 @@ export const getUserList = async() => {
         return [];
     }
 };
-export const getUserListOfType = async(type) => {
-    try{
-        const users = await getUserList()
-        return users.filter((u) => u.role === type) || []
+
+
+export const getUserListOfType = async (type) => {
+    try {
+      const response = await axios.get('http://localhost:8090/users/');
+      const users = response.data;
+  
+      // Filter users based on the specified type
+      const filteredUsers = users.filter((u) => u.role === type) || [];
+      return filteredUsers;
+    } catch (error) {
+      console.error('Error fetching user list:', error);
+      return [];
     }
-    catch(error){
-        return [];
-    }
-}
+  };
+
 export const getUserByID = async(id) => {
     try{
         const users = await getUserList()
@@ -96,42 +105,47 @@ export const loginUser = async(email,pwd) => {
     }
 };
 
-export const addUser = async(name,email,pwd,role) => {
-    try{
-        const data = await getUserList()
-        const myUser = data.find( (item) => item.email === email && item.role == role)
-        if(myUser){
-            return {
-                status: false,
-                data: null,
-                msg: "User already exists"
-            }
+export const addUser = async (name, email, pwd, role) => {
+    try {
+      const response = await axios.post('http://localhost:8090/users/add', {
+        name,
+        email,
+        pwd,
+        role,
+      });
+      return {
+        status: true,
+        data: response.data,
+        msg: "Successfully registered."
         }
-        const newUser = {
-            id: new Date().getTime(),
-            name: name,
-            email: email,
-            pwd: pwd,
-            role: role
-        }
-        if(role == 'member'){
-            newUser.rate = 20
-        }
-        await AsyncStorage.setItem(USER_DATA,JSON.stringify([...data,newUser]))
-        return {
-            status: true,
-            data: newUser,
-            msg: "Successfully registered."
-        }
+
+    } catch (error) {
+      console.error('Error adding user:', error);
+      return {
+        status: false,
+        data: null,
+        msg: 'Internal Server Error',
+      };
     }
-    catch(error){
-        return {
-            status: false,
-            data : null,
-            msg: "Error:" + error.msg
-        }
+  };
+
+  export const updateUser = async (id, updatedUserData) => {
+    try {
+      const response = await axios.patch(`http://localhost:8090/users/${id}`, updatedUserData);
+      return {
+        status: true,
+        data: response.data,
+        msg: 'User updated successfully.',
+      };
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return {
+        status: false,
+        data: null,
+        msg: 'Internal Server Error',
+      };
     }
-}
+  };
 
 export const getProjectList = async() => {
     try{
